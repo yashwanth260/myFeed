@@ -8,6 +8,10 @@ const HOST = process.env.HOST || '0.0.0.0';
 function createWebDevServer(port, appName, appColor, role, customBody) {
   const server = http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    if (typeof customBody === 'string' && customBody.trim().startsWith('<!DOCTYPE')) {
+      res.end(customBody);
+      return;
+    }
     res.end(`<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -2117,25 +2121,43 @@ const adminHTML = `
   </script>
 `;
 
-createWebDevServer(8084, 'CraveCart Admin Dashboard', '#3B82F6', 'admin', adminHTML);
+const adminHtmlPath = path.resolve(__dirname, '../apps/admin/index.html');
+const finalAdminHTML = fs.existsSync(adminHtmlPath) ? fs.readFileSync(adminHtmlPath, 'utf8') : adminHTML;
+
+createWebDevServer(8084, 'Feedo Gold Admin Dashboard', '#D4AF37', 'admin', finalAdminHTML);
 
 // ==========================================
 // 5. CORE BACKEND API SERVER (Port 4000)
 // ==========================================
-const { createApiServer } = require('../apps/backend/src/server');
-const apiServer = createApiServer();
-apiServer.listen(4000, HOST, () => {
-  console.log(`[API] CraveCart REST API live at http://${HOST}:4000/api/v1`);
-  console.log(`[API] Swagger / OpenAPI Docs live at http://${HOST}:4000/api/v1/docs`);
-  console.log(`[ADMIN] Admin Dashboard live at http://${HOST}:8084`);
-});
+const skipLegacyApi = process.env.SKIP_LEGACY_API === 'true' || process.argv.includes('--web-only');
+let apiServer = null;
+
+if (!skipLegacyApi) {
+  try {
+    const { createApiServer } = require('../apps/backend/src/server');
+    apiServer = createApiServer();
+    apiServer.listen(4000, HOST, () => {
+      console.log(`[API] CraveCart REST API live at http://${HOST}:4000/api/v1`);
+      console.log(`[API] Swagger / OpenAPI Docs live at http://${HOST}:4000/api/v1/docs`);
+      console.log(`[ADMIN] Admin Dashboard live at http://${HOST}:8084`);
+    });
+  } catch (err) {
+    console.warn(`[API] Legacy API server skipped or failed to bind: ${err.message}`);
+  }
+} else {
+  console.log(`[WEB] Running in web-portals only mode. Port 4000 reserved for NestJS Enterprise API.`);
+}
 
 // Graceful container shutdown
 const gracefulShutdown = () => {
   console.log('[CraveCart] Shutting down container services gracefully...');
-  apiServer.close(() => {
+  if (apiServer) {
+    apiServer.close(() => {
+      process.exit(0);
+    });
+  } else {
     process.exit(0);
-  });
+  }
   setTimeout(() => process.exit(0), 5000);
 };
 

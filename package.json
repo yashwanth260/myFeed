@@ -7,8 +7,9 @@
     "packages/*"
   ],
   "scripts": {
-    "start": "node scripts/start-web-servers.js",
-    "start:web": "node scripts/start-web-servers.js",
+    "start": "node scripts/start-all.js",
+    "start:all": "node scripts/start-all.js",
+    "start:web": "node scripts/start-web-servers.js --web-only",
     "start:api": "node apps/api/dist/main.js",
     "build:api": "tsc --project apps/api/tsconfig.json",
     "start:customer": "npm --prefix apps/customer start",
