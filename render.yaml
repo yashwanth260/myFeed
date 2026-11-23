@@ -1,10 +1,17 @@
+databases:
+  - name: feedo-db
+    databaseName: feedo_db
+    user: feedo
+    plan: free
+    region: oregon
+
 services:
   - type: web
     name: feedo-core-api
     runtime: node
-    plan: starter
+    plan: free
     region: oregon
-    buildCommand: npm install && npm run prisma:generate && npm run build:api
+    buildCommand: npm install && npm run prisma:generate && npx prisma db push --accept-data-loss && node scripts/seed-all.js && npm run build:api
     startCommand: npm run start:api
     healthCheckPath: /api/v1/health
     envVars:
@@ -15,17 +22,15 @@ services:
       - key: API_PREFIX
         value: api/v1
       - key: DATABASE_URL
-        sync: false
+        fromDatabase:
+          name: feedo-db
+          property: connectionString
       - key: MONGODB_URI
         sync: false
       - key: MONGODB_DB_NAME
         value: feedo_catalog
       - key: REDIS_URL
         sync: false
-      - key: REDIS_HOST
-        sync: false
-      - key: REDIS_PORT
-        value: 6379
       - key: REDIS_TLS
         value: "true"
       - key: JWT_SECRET
