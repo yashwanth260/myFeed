@@ -128,6 +128,7 @@ function createStaticSpaServer(port, appName, distDir) {
     '.woff': 'font/woff',
     '.woff2': 'font/woff2',
     '.ttf': 'font/ttf',
+    '.wasm': 'application/wasm',
   };
 
   const server = http.createServer((req, res) => {
@@ -1863,7 +1864,12 @@ const deliveryHTML = `
 `;
 
 // Start all local servers
-createWebDevServer(8081, 'CraveCart Customer App', '#FFC727', 'customer', customerHTML);
+const customerWebDir = path.join(__dirname, '..', 'apps', 'customer_flutter', 'build', 'web');
+if (fs.existsSync(path.join(customerWebDir, 'index.html'))) {
+  createStaticSpaServer(8081, 'Feedo Customer Flutter Web App', customerWebDir);
+} else {
+  createWebDevServer(8081, 'CraveCart Customer App', '#FFC727', 'customer', customerHTML);
+}
 const restaurantDistDir = path.join(__dirname, '..', 'apps', 'restaurant', 'dist');
 if (fs.existsSync(path.join(restaurantDistDir, 'index.html'))) {
   createStaticSpaServer(8082, 'Feedo Restaurant Partner App (Integrated)', restaurantDistDir);

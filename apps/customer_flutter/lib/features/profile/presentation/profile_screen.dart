@@ -163,6 +163,13 @@ class ProfileScreen extends ConsumerWidget {
                   ),
                   const Divider(height: 1),
                   _ProfileTile(
+                    icon: Icons.payment_rounded,
+                    title: 'Payment Methods',
+                    subtitle: 'Saved UPI, Cards & Feedo Wallet (₹500)',
+                    onTap: () => _showPaymentMethodsDialog(context),
+                  ),
+                  const Divider(height: 1),
+                  _ProfileTile(
                     icon: Icons.local_offer_outlined,
                     title: 'Offers & Coupons',
                     subtitle: 'Available gold vouchers and deals',
@@ -174,6 +181,13 @@ class ProfileScreen extends ConsumerWidget {
                     title: 'Favorites',
                     subtitle: 'Bookmarked kitchens and dishes',
                     onTap: () => context.push('/favorites'),
+                  ),
+                  const Divider(height: 1),
+                  _ProfileTile(
+                    icon: Icons.language_rounded,
+                    title: 'App Language',
+                    subtitle: 'English (US) • Regional support ready',
+                    onTap: () => _showLanguageDialog(context),
                   ),
                 ],
               ),
@@ -281,6 +295,111 @@ class ProfileScreen extends ConsumerWidget {
             Text('• WhatsApp Concierge: +91 98765 00000'),
             SizedBox(height: 6),
             Text('• Email: concierge@feedo.com'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showPaymentMethodsDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.payment_rounded, color: FeedoColors.deepGold),
+            SizedBox(width: 8),
+            Text('Payment Methods'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.account_balance_wallet_rounded, color: FeedoColors.primaryGold),
+              title: const Text('Feedo Gold Wallet', style: TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: const Text('Active Balance: ₹500.00'),
+              trailing: const Chip(label: Text('Primary', style: TextStyle(fontSize: 10))),
+            ),
+            const Divider(),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.qr_code_2_rounded, color: FeedoColors.deepGold),
+              title: const Text('Google Pay / PhonePe UPI'),
+              subtitle: const Text('yashwanth@okhdfcbank'),
+            ),
+            const Divider(),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.credit_card_rounded, color: FeedoColors.deepGold),
+              title: const Text('HDFC Regalia Gold Card'),
+              subtitle: const Text('•••• •••• •••• 4289'),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showLanguageDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.language_rounded, color: FeedoColors.deepGold),
+            SizedBox(width: 8),
+            Text('Select Language'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            RadioListTile<String>(
+              value: 'en',
+              groupValue: 'en',
+              title: const Text('English (Default)'),
+              activeColor: FeedoColors.primaryGold,
+              onChanged: (_) => Navigator.pop(ctx),
+            ),
+            RadioListTile<String>(
+              value: 'kn',
+              groupValue: 'en',
+              title: const Text('ಕನ್ನಡ (Kannada)'),
+              activeColor: FeedoColors.primaryGold,
+              onChanged: (_) {
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Kannada language pack will be loaded in next update.')),
+                );
+              },
+            ),
+            RadioListTile<String>(
+              value: 'hi',
+              groupValue: 'en',
+              title: const Text('हिन्दी (Hindi)'),
+              activeColor: FeedoColors.primaryGold,
+              onChanged: (_) {
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Hindi language pack will be loaded in next update.')),
+                );
+              },
+            ),
           ],
         ),
         actions: [

@@ -2,7 +2,7 @@ import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 
 /// Centralized API configuration for Feedo Customer App
-/// Reads compile-time --dart-define=API_BASE_URL=<URL> when provided,
+/// Reads compile-time `--dart-define=API_BASE_URL=<URL>` when provided,
 /// falling back to localhost for Web and 10.0.2.2 for Android emulators.
 class ApiConfig {
   ApiConfig._();

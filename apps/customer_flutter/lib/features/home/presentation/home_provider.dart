@@ -108,13 +108,57 @@ class SearchFilterNotifier extends StateNotifier<SearchFilterState> {
   }
 }
 
+enum HomeSection { all, popular, topRated, fastDelivery, newOnFeedo }
+
+final homeSectionProvider = StateProvider<HomeSection>((ref) => HomeSection.all);
+
+final popularRestaurantsProvider = Provider<List<RestaurantModel>>((ref) {
+  final all = ref.watch(allRestaurantsProvider);
+  return all.where((r) => r.isFeatured || r.ratingCount >= 1000).toList();
+});
+
+final topRatedRestaurantsProvider = Provider<List<RestaurantModel>>((ref) {
+  final all = ref.watch(allRestaurantsProvider);
+  return all.where((r) => r.rating >= 4.8).toList();
+});
+
+final fastDeliveryRestaurantsProvider = Provider<List<RestaurantModel>>((ref) {
+  final all = ref.watch(allRestaurantsProvider);
+  return all.where((r) => r.deliveryTimeMinutes <= 20).toList();
+});
+
+final newOnFeedoRestaurantsProvider = Provider<List<RestaurantModel>>((ref) {
+  final all = ref.watch(allRestaurantsProvider);
+  return all.reversed.take(5).toList();
+});
+
 // Filtered Restaurants
 final filteredRestaurantsProvider = Provider<List<RestaurantModel>>((ref) {
   final all = ref.watch(allRestaurantsProvider);
   final filter = ref.watch(searchFilterProvider);
   final selectedCat = ref.watch(selectedCategoryProvider);
+  final section = ref.watch(homeSectionProvider);
 
-  return all.where((r) {
+  List<RestaurantModel> sourceList;
+  switch (section) {
+    case HomeSection.popular:
+      sourceList = ref.watch(popularRestaurantsProvider);
+      break;
+    case HomeSection.topRated:
+      sourceList = ref.watch(topRatedRestaurantsProvider);
+      break;
+    case HomeSection.fastDelivery:
+      sourceList = ref.watch(fastDeliveryRestaurantsProvider);
+      break;
+    case HomeSection.newOnFeedo:
+      sourceList = ref.watch(newOnFeedoRestaurantsProvider);
+      break;
+    case HomeSection.all:
+      sourceList = all;
+      break;
+  }
+
+  return sourceList.where((r) {
     // 1. Category match
     if (selectedCat != null) {
       final matchesCat = r.cuisines.any((c) => c.toLowerCase().contains(selectedCat.toLowerCase())) ||

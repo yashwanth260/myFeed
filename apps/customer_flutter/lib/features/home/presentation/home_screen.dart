@@ -18,6 +18,7 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authProvider).value;
     final selectedAddress = ref.watch(selectedAddressProvider);
+    final currentSection = ref.watch(homeSectionProvider);
     final restaurants = ref.watch(filteredRestaurantsProvider);
     final favorites = ref.watch(favoritesProvider);
     final cart = ref.watch(cartProvider);
@@ -224,6 +225,29 @@ class HomeScreen extends ConsumerWidget {
                   child: CategoryChipList(),
                 ),
 
+                // Curated Section Chips (Popular near you, Top rated, Fast delivery, New on Feedo)
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          _buildSectionChip(context, ref, HomeSection.all, '✨ All Kitchens', currentSection),
+                          const SizedBox(width: 8),
+                          _buildSectionChip(context, ref, HomeSection.popular, '🔥 Popular near you', currentSection),
+                          const SizedBox(width: 8),
+                          _buildSectionChip(context, ref, HomeSection.topRated, '⭐ Top rated', currentSection),
+                          const SizedBox(width: 8),
+                          _buildSectionChip(context, ref, HomeSection.fastDelivery, '⚡ Fast delivery', currentSection),
+                          const SizedBox(width: 8),
+                          _buildSectionChip(context, ref, HomeSection.newOnFeedo, '🌱 New on Feedo', currentSection),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+
                 // Restaurants Header
                 SliverToBoxAdapter(
                   child: Padding(
@@ -232,7 +256,7 @@ class HomeScreen extends ConsumerWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Gold Standard Kitchens (${restaurants.length})',
+                          _getSectionTitle(currentSection, restaurants.length),
                           style: TextStyle(
                             fontFamily: 'Poppins',
                             fontSize: 16,
@@ -352,6 +376,73 @@ class HomeScreen extends ConsumerWidget {
                 ),
               ),
           ],
+        ),
+      ),
+    );
+  }
+
+  String _getSectionTitle(HomeSection section, int count) {
+    switch (section) {
+      case HomeSection.popular:
+        return '🔥 Popular Near You ($count)';
+      case HomeSection.topRated:
+        return '⭐ Top Rated Kitchens ($count)';
+      case HomeSection.fastDelivery:
+        return '⚡ Fast Delivery (≤20m) ($count)';
+      case HomeSection.newOnFeedo:
+        return '🌱 New on Feedo ($count)';
+      case HomeSection.all:
+        return 'Gold Standard Kitchens ($count)';
+    }
+  }
+
+  Widget _buildSectionChip(
+    BuildContext context,
+    WidgetRef ref,
+    HomeSection section,
+    String label,
+    HomeSection currentSection,
+  ) {
+    final isSelected = section == currentSection;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return GestureDetector(
+      onTap: () => ref.read(homeSectionProvider.notifier).state = section,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          gradient: isSelected ? FeedoColors.goldGradient : null,
+          color: isSelected
+              ? null
+              : (isDark ? FeedoColors.cardDark : Colors.white),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected
+                ? FeedoColors.deepGold
+                : (isDark ? FeedoColors.borderDark : FeedoColors.borderLight),
+            width: isSelected ? 1.5 : 1,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: FeedoColors.primaryGold.withOpacity(0.2),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 12,
+            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+            color: isSelected
+                ? FeedoColors.textPrimaryLight
+                : (isDark ? FeedoColors.textSecondaryDark : FeedoColors.textSecondaryLight),
+          ),
         ),
       ),
     );
