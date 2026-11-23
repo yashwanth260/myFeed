@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Feedo Delivery Partner</string>
+    <string name="title_activity_main">Feedo Delivery Partner</string>
+    <string name="package_name">com.feedo.deliverypartner</string>
+    <string name="custom_url_scheme">com.feedo.deliverypartner</string>
+</resources>

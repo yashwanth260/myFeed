@@ -1,0 +1,33 @@
+{
+  "expo": {
+    "name": "CraveCart Customer",
+    "slug": "cravecart-customer",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "cravecart-customer",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FF4757"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.cravecart.customer"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FF4757"
+      },
+      "package": "com.cravecart.customer"
+    },
+    "plugins": [
+      "expo-router"
+    ]
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "name": "@cravecart/backend",
+  "version": "1.0.0",
+  "description": "CraveCart Unified Production Backend Service (API v1, Real-Time Socket.IO, Financial Ledger, Admin)",
+  "main": "dist/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node src/index.js",
+    "test": "node tests/api.test.js"
+  },
+  "dependencies": {
+    "@cravecart/shared-business-logic": "*",
+    "@cravecart/shared-config": "*",
+    "@cravecart/shared-types": "*",
+    "@cravecart/shared-validation": "*"
+  },
+  "private": true
+}
+

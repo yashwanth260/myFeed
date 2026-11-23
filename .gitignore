@@ -1,0 +1,46 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build and distribution
+dist/
+build/
+out/
+.next/
+.expo/
+.turbo/
+*.tsbuildinfo
+
+# Flutter build artifacts
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+build/
+android/.gradle/
+android/app/build/
+ios/Pods/
+
+# Environment and sensitive keys
+.env
+.env.*
+!.env.example
+apps/api/.env
+!apps/api/.env.example
+
+# Backups and temporary files
+backups/
+*.log
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# IDE and Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*.sublime-workspace
+

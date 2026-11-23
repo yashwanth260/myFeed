@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  # -------------------------------------------------------------
+  # 1. PostgreSQL + PostGIS (Spatial Relational DB)
+  # -------------------------------------------------------------
+  postgres:
+    image: postgis/postgis:16-3.4
+    container_name: feedo-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: feedo
+      POSTGRES_PASSWORD: feedo_pass
+      POSTGRES_DB: feedo_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - feedo_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U feedo -d feedo_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # -------------------------------------------------------------
+  # 2. MongoDB (Dynamic Product Catalogs & Schemas)
+  # -------------------------------------------------------------
+  mongodb:
+    image: mongo:7
+    container_name: feedo-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_DATABASE: feedo_catalog
+    ports:
+      - "27017:27017"
+    volumes:
+      - feedo_mongodata:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # -------------------------------------------------------------
+  # 3. Redis (Caching, Realtime WebSockets & BullMQ Message Queue)
+  # -------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: feedo-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - feedo_redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  feedo_pgdata:
+    name: feedo_pgdata
+  feedo_mongodata:
+    name: feedo_mongodata
+  feedo_redisdata:
+    name: feedo_redisdata

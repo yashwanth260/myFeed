@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Feedo | Enterprise Admin Console</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; background-color: #121212; color: #FFFBF0; }
+    h1, h2, h3, .font-heading { font-family: 'Poppins', sans-serif; }
+    .gold-gradient { background: linear-gradient(135deg, #F5D77A 0%, #D4AF37 50%, #B8860B 100%); }
+    .gold-text { color: #D4AF37; }
+    .gold-border { border-color: #D4AF37; }
+    .card-surface { background-color: #1E1B14; border: 1px solid rgba(212, 175, 55, 0.2); }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased selection:bg-yellow-500 selection:text-black">
+
+  <!-- AUTH SCREEN (IF NOT LOGGED IN) -->
+  <div id="authScreen" class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4">
+    <div class="card-surface w-full max-w-md p-8 rounded-2xl shadow-2xl relative overflow-hidden">
+      <div class="absolute -top-12 -right-12 w-32 h-32 bg-yellow-600/10 rounded-full blur-2xl"></div>
+      <div class="flex items-center space-x-3 mb-6">
+        <div class="w-10 h-10 rounded-xl gold-gradient flex items-center justify-center font-heading font-extrabold text-black text-xl">F</div>
+        <div>
+          <h1 class="text-xl font-heading font-bold gold-text">Feedo Admin</h1>
+          <p class="text-xs text-yellow-100/60">Platform Operations & Compliance</p>
+        </div>
+      </div>
+      <form id="loginForm" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-yellow-200/80 mb-1">Admin Email</label>
+          <input type="email" id="loginEmail" value="admin@feedo.dev" required class="w-full bg-[#121212] border border-yellow-700/40 rounded-xl px-4 py-2.5 text-sm focus:border-yellow-400 focus:outline-none transition">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-yellow-200/80 mb-1">Password</label>
+          <input type="password" id="loginPassword" value="Password@123" required class="w-full bg-[#121212] border border-yellow-700/40 rounded-xl px-4 py-2.5 text-sm focus:border-yellow-400 focus:outline-none transition">
+        </div>
+        <button type="submit" id="loginBtn" class="w-full gold-gradient text-black font-semibold py-2.5 rounded-xl text-sm shadow hover:opacity-95 transition">Sign In to Admin</button>
+        <p id="loginError" class="text-red-400 text-xs text-center hidden"></p>
+      </form>
+    </div>
+  </div>
+
+  <!-- MAIN APP WRAPPER -->
+  <div id="adminApp" class="flex-1 flex flex-col hidden">
+    <!-- TOP NAVIGATION -->
+    <header class="border-b border-yellow-600/20 bg-[#17140e] sticky top-0 z-40 px-6 py-3.5 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-8 h-8 rounded-lg gold-gradient flex items-center justify-center font-heading font-bold text-black text-sm">F</div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <span class="font-heading font-bold gold-text tracking-wide text-base">FEEDO</span>
+            <span class="text-[10px] bg-yellow-500/10 text-yellow-400 px-2 py-0.5 rounded border border-yellow-500/20 font-mono">ADMIN CONSOLE</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center space-x-4">
+        <span class="text-xs text-emerald-400 flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>Core API: Online</span>
+        <span id="adminEmailBadge" class="text-xs bg-[#1E1B14] border border-yellow-700/30 px-3 py-1 rounded-full text-yellow-200/80">admin@feedo.dev</span>
+        <button onclick="handleLogout()" class="text-xs text-red-400 hover:text-red-300 font-medium transition">Logout</button>
+      </div>
+    </header>
+
+    <!-- TAB SELECTOR -->
+    <div class="border-b border-yellow-700/20 bg-[#14120d] px-6 flex space-x-6">
+      <button onclick="switchTab('restaurants')" id="tabBtn-restaurants" class="py-3 text-sm font-heading font-semibold border-b-2 border-yellow-400 gold-text transition">Restaurants</button>
+      <button onclick="switchTab('coupons')" id="tabBtn-coupons" class="py-3 text-sm font-heading font-semibold border-b-2 border-transparent text-yellow-100/60 hover:text-yellow-200 transition">Coupons</button>
+      <button onclick="switchTab('orders')" id="tabBtn-orders" class="py-3 text-sm font-heading font-semibold border-b-2 border-transparent text-yellow-100/60 hover:text-yellow-200 transition">Orders & Refunds</button>
+    </div>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="flex-1 p-6 max-w-7xl mx-auto w-full">
+      <!-- NOTIFICATION TOAST -->
+      <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-yellow-500 text-black px-4 py-2.5 rounded-xl font-medium text-xs shadow-xl flex items-center space-x-2">
+        <span id="toastMsg">Action completed</span>
+      </div>
+
+      <!-- TAB 1: RESTAURANTS -->
+      <section id="tab-restaurants" class="space-y-4">
+        <div class="flex justify-between items-center">
+          <div>
+            <h2 class="font-heading font-bold text-lg gold-text">Restaurant Approval & Operations</h2>
+            <p class="text-xs text-yellow-100/50">Manage merchant lifecycle, approval badges, and operational status</p>
+          </div>
+          <button onclick="loadRestaurants()" class="text-xs bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 px-3 py-1.5 rounded-lg hover:bg-yellow-500/20 transition">Refresh List</button>
+        </div>
+        <div id="restaurantsList" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Dynamically Populated -->
+        </div>
+      </section>
+
+      <!-- TAB 2: COUPONS -->
+      <section id="tab-coupons" class="space-y-4 hidden">
+        <div class="flex justify-between items-center">
+          <div>
+            <h2 class="font-heading font-bold text-lg gold-text">Coupons & Campaigns</h2>
+            <p class="text-xs text-yellow-100/50">Issue discount codes, define minimum carts, and toggle promotions</p>
+          </div>
+          <button onclick="toggleCouponModal(true)" class="text-xs gold-gradient text-black font-semibold px-3 py-1.5 rounded-lg shadow hover:opacity-95 transition">+ Create Coupon</button>
+        </div>
+        <div class="card-surface rounded-2xl overflow-hidden">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-black/40 text-yellow-200/60 font-semibold border-b border-yellow-700/20">
+              <tr>
+                <th class="p-3">CODE</th>
+                <th class="p-3">DISCOUNT</th>
+                <th class="p-3">MIN CART</th>
+                <th class="p-3">MAX CAP</th>
+                <th class="p-3">EXPIRY</th>
+                <th class="p-3">STATUS</th>
+                <th class="p-3 text-right">ACTION</th>
+              </tr>
+            </thead>
+            <tbody id="couponsTableBody" class="divide-y divide-yellow-700/10">
+              <!-- Dynamically Populated -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- TAB 3: ORDERS & REFUNDS -->
+      <section id="tab-orders" class="space-y-4 hidden">
+        <div class="flex justify-between items-center">
+          <div>
+            <h2 class="font-heading font-bold text-lg gold-text">Order Management & Refunds</h2>
+            <p class="text-xs text-yellow-100/50">Inspect multi-actor transactions and issue atomic refunds</p>
+          </div>
+          <button onclick="loadOrders()" class="text-xs bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 px-3 py-1.5 rounded-lg hover:bg-yellow-500/20 transition">Refresh Orders</button>
+        </div>
+        <div class="card-surface rounded-2xl overflow-hidden">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-black/40 text-yellow-200/60 font-semibold border-b border-yellow-700/20">
+              <tr>
+                <th class="p-3">ORDER #</th>
+                <th class="p-3">CUSTOMER</th>
+                <th class="p-3">RESTAURANT</th>
+                <th class="p-3">AMOUNT</th>
+                <th class="p-3">ORDER STATUS</th>
+                <th class="p-3">PAYMENT</th>
+                <th class="p-3 text-right">ACTION</th>
+              </tr>
+            </thead>
+            <tbody id="ordersTableBody" class="divide-y divide-yellow-700/10">
+              <!-- Dynamically Populated -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- CREATE COUPON MODAL -->
+  <div id="couponModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 hidden">
+    <div class="card-surface w-full max-w-md p-6 rounded-2xl shadow-2xl space-y-4">
+      <div class="flex justify-between items-center">
+        <h3 class="font-heading font-bold text-sm gold-text">Create New Promo Coupon</h3>
+        <button onclick="toggleCouponModal(false)" class="text-yellow-100/60 hover:text-white">&times;</button>
+      </div>
+      <form id="createCouponForm" class="space-y-3 text-xs">
+        <div>
+          <label class="block text-yellow-200/70 mb-1">Coupon Code (Uppercase)</label>
+          <input type="text" id="cpnCode" placeholder="e.g. FEEDO30" required class="w-full bg-[#121212] border border-yellow-700/40 rounded-xl px-3 py-2 text-xs uppercase font-mono">
+        </div>
+        <div>
+          <label class="block text-yellow-200/70 mb-1">Description</label>
+          <input type="text" id="cpnDesc" placeholder="e.g. 30% OFF on all gourmet boxes" required class="w-full bg-[#121212] border border-yellow-700/40 rounded-xl px-3 py-2 text-xs">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-yellow-200/70 mb-1">Discount %</label>
+            <input type="number" id="cpnValue" min="1" max="100" value="30" required class="w-full bg-[#121212] border border-yellow-700/40 rounded-xl px-3 py-2 text-xs">
+          </div>
+          <div>
+            <label class="block text-yellow-200/70 mb-1">Max Cap (₹)</label>
+            <input type="number" id="cpnCap" min="10" value="120" required class="w-full bg-[#121212] border border-yellow-700/40 rounded-xl px-3 py-2 text-xs">
+          </div>
+        </div>
+        <div>
+          <label class="block text-yellow-200/70 mb-1">Min Order (₹)</label>
+          <input type="number" id="cpnMin" min="0" value="199" required class="w-full bg-[#121212] border border-yellow-700/40 rounded-xl px-3 py-2 text-xs">
+        </div>
+        <div>
+          <label class="block text-yellow-200/70 mb-1">Valid Days</label>
+          <input type="number" id="cpnDays" min="1" value="30" required class="w-full bg-[#121212] border border-yellow-700/40 rounded-xl px-3 py-2 text-xs">
+        </div>
+        <div class="flex justify-end space-x-2 pt-2">
+          <button type="button" onclick="toggleCouponModal(false)" class="px-3 py-1.5 rounded-lg border border-yellow-700/30 text-yellow-100/60">Cancel</button>
+          <button type="submit" class="gold-gradient text-black font-semibold px-4 py-1.5 rounded-lg shadow">Create Coupon</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = window.location.origin.includes(':4000') 
+      ? '/api/v1' 
+      : 'http://localhost:4000/api/v1';
+
+    let token = localStorage.getItem('feedo_admin_token');
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toastMsg').innerText = msg;
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 3000);
+    }
+
+    async function api(path, options = {}) {
+      const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
+      if (res.status === 401 || res.status === 403) {
+        handleLogout();
+        throw new Error('Session expired. Please log in again.');
+      }
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(data?.message || 'Request failed');
+      return data;
+    }
+
+    // AUTH HANDLING
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const errEl = document.getElementById('loginError');
+      errEl.classList.add('hidden');
+      try {
+        const email = document.getElementById('loginEmail').value;
+        const password = document.getElementById('loginPassword').value;
+        const res = await fetch(`${API_BASE}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data?.message || 'Login failed');
+        if (data.user?.role !== 'ADMIN') throw new Error('Unauthorized: User is not an ADMIN');
+
+        token = data.accessToken;
+        localStorage.setItem('feedo_admin_token', token);
+        document.getElementById('adminEmailBadge').innerText = data.user.email;
+        initApp();
+      } catch (err) {
+        errEl.innerText = err.message;
+        errEl.classList.remove('hidden');
+      }
+    });
+
+    function handleLogout() {
+      token = null;
+      localStorage.removeItem('feedo_admin_token');
+      document.getElementById('authScreen').classList.remove('hidden');
+      document.getElementById('adminApp').classList.add('hidden');
+    }
+
+    function switchTab(tabId) {
+      ['restaurants', 'coupons', 'orders'].forEach((t) => {
+        document.getElementById(`tab-${t}`).classList.add('hidden');
+        const btn = document.getElementById(`tabBtn-${t}`);
+        btn.classList.remove('border-yellow-400', 'gold-text');
+        btn.classList.add('border-transparent', 'text-yellow-100/60');
+      });
+      document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+      const activeBtn = document.getElementById(`tabBtn-${tabId}`);
+      activeBtn.classList.remove('border-transparent', 'text-yellow-100/60');
+      activeBtn.classList.add('border-yellow-400', 'gold-text');
+
+      if (tabId === 'restaurants') loadRestaurants();
+      if (tabId === 'coupons') loadCoupons();
+      if (tabId === 'orders') loadOrders();
+    }
+
+    // 1. RESTAURANTS
+    async function loadRestaurants() {
+      const container = document.getElementById('restaurantsList');
+      container.innerHTML = '<p class="text-xs text-yellow-100/50">Loading restaurants...</p>';
+      try {
+        const res = await api('/admin/restaurants');
+        const list = res.data || res;
+        container.innerHTML = list.map((r) => `
+          <div class="card-surface p-5 rounded-2xl flex flex-col justify-between space-y-4">
+            <div>
+              <div class="flex items-start justify-between">
+                <div>
+                  <h3 class="font-heading font-bold text-sm gold-text">${r.name}</h3>
+                  <p class="text-xs text-yellow-100/60">${r.address}, ${r.city}</p>
+                </div>
+                <span class="text-[10px] px-2 py-0.5 rounded font-semibold ${r.isApproved ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'}">
+                  ${r.isApproved ? 'Approved' : 'Pending Review'}
+                </span>
+              </div>
+              <div class="mt-3 flex items-center gap-4 text-xs text-yellow-100/50">
+                <span>🍽️ ${r._count?.menuItems || 0} Menu Items</span>
+                <span>📦 ${r._count?.orders || 0} Orders</span>
+                <span>★ ${r.rating || 4.5}</span>
+              </div>
+            </div>
+            <div class="flex space-x-2 pt-2 border-t border-yellow-700/20">
+              ${r.isApproved 
+                ? `<button onclick="updateRestaurant('${r.id}', false)" class="flex-1 py-1.5 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 text-xs font-medium transition">Revoke Approval</button>`
+                : `<button onclick="updateRestaurant('${r.id}', true)" class="flex-1 py-1.5 rounded-xl gold-gradient text-black text-xs font-semibold shadow hover:opacity-95 transition">Approve Restaurant</button>`
+              }
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        container.innerHTML = `<p class="text-xs text-red-400">${err.message}</p>`;
+      }
+    }
+
+    async function updateRestaurant(id, isApproved) {
+      try {
+        await api(`/admin/restaurants/${id}/status`, {
+          method: 'PATCH',
+          body: JSON.stringify({ isApproved }),
+        });
+        showToast(isApproved ? 'Restaurant approved!' : 'Approval revoked');
+        loadRestaurants();
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    // 2. COUPONS
+    async function loadCoupons() {
+      const tbody = document.getElementById('couponsTableBody');
+      tbody.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-xs text-yellow-100/40">Loading coupons...</td></tr>';
+      try {
+        const res = await api('/admin/coupons');
+        const list = res.data || res;
+        tbody.innerHTML = list.map((c) => `
+          <tr class="hover:bg-yellow-500/5">
+            <td class="p-3 font-mono font-bold gold-text">${c.code}</td>
+            <td class="p-3">${c.discountValue}%</td>
+            <td class="p-3">₹${((c.minOrderAmountPaise || 0) / 100).toFixed(0)}</td>
+            <td class="p-3">₹${((c.maxDiscountPaise || 0) / 100).toFixed(0)}</td>
+            <td class="p-3">${new Date(c.validUntil).toLocaleDateString()}</td>
+            <td class="p-3">
+              <span class="text-[10px] px-2 py-0.5 rounded font-semibold ${c.isActive ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}">
+                ${c.isActive ? 'Active' : 'Disabled'}
+              </span>
+            </td>
+            <td class="p-3 text-right">
+              <button onclick="toggleCoupon('${c.id}', ${!c.isActive})" class="text-xs ${c.isActive ? 'text-red-400 hover:text-red-300' : 'text-emerald-400 hover:text-emerald-300'} font-medium">
+                ${c.isActive ? 'Disable' : 'Enable'}
+              </button>
+            </td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-xs text-red-400">${err.message}</td></tr>`;
+      }
+    }
+
+    async function toggleCoupon(id, isActive) {
+      try {
+        await api(`/admin/coupons/${id}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ isActive }),
+        });
+        showToast(isActive ? 'Coupon enabled' : 'Coupon disabled');
+        loadCoupons();
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    function toggleCouponModal(show) {
+      document.getElementById('couponModal').classList.toggle('hidden', !show);
+    }
+
+    document.getElementById('createCouponForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      try {
+        const validUntil = new Date();
+        validUntil.setDate(validUntil.getDate() + parseInt(document.getElementById('cpnDays').value || '30', 10));
+
+        await api('/admin/coupons', {
+          method: 'POST',
+          body: JSON.stringify({
+            code: document.getElementById('cpnCode').value,
+            description: document.getElementById('cpnDesc').value,
+            discountValue: parseInt(document.getElementById('cpnValue').value, 10),
+            maxDiscountPaise: parseInt(document.getElementById('cpnCap').value, 10) * 100,
+            minOrderAmountPaise: parseInt(document.getElementById('cpnMin').value, 10) * 100,
+            validUntil: validUntil.toISOString(),
+          }),
+        });
+        toggleCouponModal(false);
+        showToast('Coupon created successfully!');
+        loadCoupons();
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+
+    // 3. ORDERS & REFUNDS
+    async function loadOrders() {
+      const tbody = document.getElementById('ordersTableBody');
+      tbody.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-xs text-yellow-100/40">Loading orders...</td></tr>';
+      try {
+        const res = await api('/admin/orders');
+        const list = res.data || res;
+        tbody.innerHTML = list.map((o) => `
+          <tr class="hover:bg-yellow-500/5">
+            <td class="p-3 font-mono font-bold text-yellow-300">${o.orderNumber}</td>
+            <td class="p-3">${o.user?.fullName || 'Customer'}</td>
+            <td class="p-3">${o.restaurant?.name || 'Restaurant'}</td>
+            <td class="p-3 font-semibold">₹${((o.finalTotalPaise || 0) / 100).toFixed(2)}</td>
+            <td class="p-3">
+              <span class="text-[10px] px-2 py-0.5 rounded font-semibold bg-yellow-500/10 text-yellow-400">
+                ${o.orderStatus}
+              </span>
+            </td>
+            <td class="p-3">
+              <span class="text-[10px] px-2 py-0.5 rounded font-semibold ${o.paymentStatus === 'COMPLETED' ? 'bg-emerald-500/10 text-emerald-400' : (o.paymentStatus === 'REFUNDED' ? 'bg-purple-500/10 text-purple-400' : 'bg-amber-500/10 text-amber-400')}">
+                ${o.paymentStatus}
+              </span>
+            </td>
+            <td class="p-3 text-right">
+              ${o.paymentStatus !== 'REFUNDED' 
+                ? `<button onclick="refundOrder('${o.id}', '${o.orderNumber}')" class="text-xs text-red-400 hover:text-red-300 font-medium">Refund</button>`
+                : `<span class="text-xs text-yellow-100/40">Refunded</span>`
+              }
+            </td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-xs text-red-400">${err.message}</td></tr>`;
+      }
+    }
+
+    async function refundOrder(id, orderNumber) {
+      const reason = prompt(`Issue refund for order ${orderNumber}? Enter reason:`, 'Customer requested cancellation');
+      if (reason === null) return;
+      try {
+        await api(`/admin/orders/${id}/refund`, {
+          method: 'POST',
+          body: JSON.stringify({ reason }),
+        });
+        showToast(`Order ${orderNumber} refunded successfully`);
+        loadOrders();
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    function initApp() {
+      document.getElementById('authScreen').classList.add('hidden');
+      document.getElementById('adminApp').classList.remove('hidden');
+      switchTab('restaurants');
+    }
+
+    if (token) {
+      initApp();
+    }
+  </script>
+</body>
+</html>
