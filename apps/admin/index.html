@@ -236,13 +236,14 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password }),
         });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data?.message || 'Login failed');
-        if (data.user?.role !== 'ADMIN') throw new Error('Unauthorized: User is not an ADMIN');
+        const raw = await res.json();
+        if (!res.ok) throw new Error(raw?.message || 'Login failed');
+        const payload = raw.data || raw;
+        if (payload.user?.role !== 'ADMIN') throw new Error('Unauthorized: User is not an ADMIN');
 
-        token = data.accessToken;
+        token = payload.accessToken;
         localStorage.setItem('feedo_admin_token', token);
-        document.getElementById('adminEmailBadge').innerText = data.user.email;
+        document.getElementById('adminEmailBadge').innerText = payload.user.email;
         initApp();
       } catch (err) {
         errEl.innerText = err.message;
