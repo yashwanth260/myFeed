@@ -85,7 +85,10 @@ export function loadGoogleMapsScript(apiKey?: string): Promise<any | null> {
     return loadPromise;
   }
 
-  const key = apiKey || import.meta.env.VITE_GOOGLE_MAPS_API_KEY || 'AIzaSyCFDvl-MIIlfJlkDFuBPXfQLwTz9RWZRy0';
+  const key = apiKey || (import.meta as any).env?.VITE_GOOGLE_MAPS_API_KEY || '';
+  if (!key) {
+    return Promise.resolve(null);
+  }
 
   loadPromise = new Promise((resolve) => {
     const existing = document.querySelector('script[data-gmaps-loader="true"]') as HTMLScriptElement | null;

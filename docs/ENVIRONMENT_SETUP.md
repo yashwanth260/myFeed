@@ -30,9 +30,9 @@ JWT_ACCESS_SECRET="cravecart-ultra-secure-jwt-access-secret-key-32chars"
 JWT_REFRESH_SECRET="cravecart-ultra-secure-jwt-refresh-secret-key-32chars"
 
 # Razorpay India (Test Sandbox)
-RAZORPAY_KEY_ID="rzp_test_51NgQ7Cravecart"
-RAZORPAY_KEY_SECRET="cravetestsecret99201481"
-RAZORPAY_WEBHOOK_SECRET="cravecart_webhook_secret_key"
+RAZORPAY_KEY_ID="rzp_test_placeholder_key"
+RAZORPAY_KEY_SECRET="your_razorpay_test_secret_here"
+RAZORPAY_WEBHOOK_SECRET="your_razorpay_webhook_secret_here"
 ```
 
 ---

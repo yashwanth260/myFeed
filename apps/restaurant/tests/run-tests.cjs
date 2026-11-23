@@ -1175,7 +1175,7 @@ async function run() {
     password: 'SuperSecretPassword123!',
     otp: '984512',
     jwtToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0',
-    apiKey: 'sk_live_razorpay_secret_key_8899',
+    apiKey: 'test_dummy_api_key_8899',
     bankAccount: '1234567890123456',
     panCard: 'ABCDE1234F',
     customerPhone: '+919876543210',

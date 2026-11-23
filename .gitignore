@@ -28,6 +28,28 @@ ios/Pods/
 !.env.example
 apps/api/.env
 !apps/api/.env.example
+apps/restaurant/.env
+!apps/restaurant/.env.example
+*.env
+**/.env
+**/.env.*
+!**/.env.example
+
+# Secrets, private certificates, and credentials
+*.pem
+*.key
+*.p12
+*.pfx
+*.cert
+*.jks
+*credentials*.json
+!credentials.example.json
+*serviceAccount*.json
+*service-account*.json
+!*service-account*.example.json
+id_rsa*
+id_ed25519*
+secrets/
 
 # Backups and temporary files
 backups/
