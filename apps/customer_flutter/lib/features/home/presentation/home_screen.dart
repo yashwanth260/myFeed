@@ -10,6 +10,7 @@ import 'home_provider.dart';
 import 'widgets/category_chip_list.dart';
 import 'widgets/promo_carousel.dart';
 import 'widgets/location_selector_sheet.dart';
+import 'widgets/service_hub_banner.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -197,6 +198,11 @@ class HomeScreen extends ConsumerWidget {
                       );
                     },
                   ),
+                ),
+
+                // 8 Integrated Service Hub (Matching image: Restaurants, Grocery, Fruits, Meat, Dairy, Bakery, Flowers, Parcel)
+                const SliverToBoxAdapter(
+                  child: ServiceHubBanner(),
                 ),
 
                 // Categories Header

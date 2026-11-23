@@ -40,7 +40,7 @@ services:
       - key: CORS_ORIGINS
         value: "*"
       - key: RAZORPAY_KEY_ID
-        sync: false
+        sync: false i want all these options 
       - key: RAZORPAY_KEY_SECRET
         sync: false
       - key: RAZORPAY_WEBHOOK_SECRET

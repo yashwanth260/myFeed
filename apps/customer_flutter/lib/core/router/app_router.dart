@@ -16,6 +16,7 @@ import '../../features/checkout/presentation/checkout_screen.dart';
 import '../../features/tracking/presentation/order_tracking_screen.dart';
 import '../../features/offers/presentation/offers_screen.dart';
 import '../../features/notifications/presentation/notifications_screen.dart';
+import '../../features/parcel/presentation/parcel_booking_screen.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -137,6 +138,11 @@ final GoRouter appRouter = GoRouter(
       path: '/notifications',
       parentNavigatorKey: _rootNavigatorKey,
       builder: (context, state) => const NotificationsScreen(),
+    ),
+    GoRoute(
+      path: '/parcel',
+      parentNavigatorKey: _rootNavigatorKey,
+      builder: (context, state) => const ParcelBookingScreen(),
     ),
   ],
 );
