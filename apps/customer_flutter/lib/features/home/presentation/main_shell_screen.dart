@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/feedo_colors.dart';
+import '../../../core/localization/language_provider.dart';
 import '../../orders/presentation/orders_provider.dart';
 
 class MainShellScreen extends ConsumerWidget {
@@ -12,6 +13,7 @@ class MainShellScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final activeOrder = ref.watch(ordersProvider).activeOrder;
+    final strings = ref.watch(appStringsProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final currentIndex = navigationShell.currentIndex;
 
@@ -40,32 +42,32 @@ class MainShellScreen extends ConsumerWidget {
           children: [
             _NavItem(
               icon: Icons.home_rounded,
-              label: 'Home',
+              label: strings.navHome,
               isSelected: currentIndex == 0,
               onTap: () => navigationShell.goBranch(0),
             ),
             _NavItem(
               icon: Icons.search_rounded,
-              label: 'Search',
+              label: strings.navSearch,
               isSelected: currentIndex == 1,
               onTap: () => navigationShell.goBranch(1),
             ),
             _NavItem(
               icon: Icons.receipt_long_rounded,
-              label: 'Orders',
+              label: strings.navOrders,
               hasBadge: activeOrder != null,
               isSelected: currentIndex == 2,
               onTap: () => navigationShell.goBranch(2),
             ),
             _NavItem(
               icon: Icons.favorite_rounded,
-              label: 'Favorites',
+              label: strings.navFavorites,
               isSelected: currentIndex == 3,
               onTap: () => navigationShell.goBranch(3),
             ),
             _NavItem(
               icon: Icons.person_rounded,
-              label: 'Profile',
+              label: strings.navProfile,
               isSelected: currentIndex == 4,
               onTap: () => navigationShell.goBranch(4),
             ),

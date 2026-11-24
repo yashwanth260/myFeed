@@ -14,6 +14,15 @@ class LocalStorageService {
   static const String keyFavorites = 'feedo_favorites';
   static const String keySelectedAddress = 'feedo_selected_address';
   static const String keyRecentSearches = 'feedo_recent_searches';
+  static const String keySelectedLanguage = 'feedo_selected_language';
+  static const String keyHasChosenLanguage = 'feedo_has_chosen_language';
+
+  // Language
+  String get selectedLanguage => _prefs.getString(keySelectedLanguage) ?? 'en';
+  Future<void> setSelectedLanguage(String lang) => _prefs.setString(keySelectedLanguage, lang);
+
+  bool get hasChosenLanguage => _prefs.getBool(keyHasChosenLanguage) ?? false;
+  Future<void> setHasChosenLanguage(bool val) => _prefs.setBool(keyHasChosenLanguage, val);
 
   // Theme
   bool get isDarkMode => _prefs.getBool(keyIsDarkMode) ?? false;

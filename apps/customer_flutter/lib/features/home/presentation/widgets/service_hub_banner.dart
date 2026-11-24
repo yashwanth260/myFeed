@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/feedo_colors.dart';
+import '../../../../core/localization/language_provider.dart';
 import '../home_provider.dart';
 
 class ServiceHubBanner extends ConsumerWidget {
@@ -94,6 +95,8 @@ class ServiceHubBanner extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final selectedCategory = ref.watch(selectedCategoryProvider);
+    final strings = ref.watch(appStringsProvider);
+    final isKn = strings.isKn;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -107,7 +110,7 @@ class ServiceHubBanner extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'All Services • ನಮ್ಮ ಸೇವೆಗಳು',
+                    isKn ? 'ನಮ್ಮ ಸೇವೆಗಳು • ${strings.whatLookingFor}' : 'All Services • ನಮ್ಮ ಸೇವೆಗಳು',
                     style: TextStyle(
                       fontFamily: 'Poppins',
                       fontSize: 16,
@@ -117,7 +120,7 @@ class ServiceHubBanner extends ConsumerWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'Order food, groceries, fresh dairy or send a parcel',
+                    isKn ? 'ಆಹಾರ, ದಿನಸಿ, ಹಣ್ಣು, ಹಾಲು ಅಥವಾ ಪಾರ್ಸಲ್ ಬುಕ್ ಮಾಡಿ' : 'Order food, groceries, fresh dairy or send a parcel',
                     style: TextStyle(
                       fontFamily: 'Inter',
                       fontSize: 11,
@@ -207,14 +210,14 @@ class ServiceHubBanner extends ConsumerWidget {
                     ),
                     const SizedBox(width: 14),
 
-                    // Titles (English + Kannada)
+                    // Titles (English + Kannada dynamic)
                     Expanded(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            item['title'] as String,
+                            isKn ? (item['kannada'] as String) : (item['title'] as String),
                             style: TextStyle(
                               fontFamily: 'Poppins',
                               fontSize: 14,
@@ -224,7 +227,7 @@ class ServiceHubBanner extends ConsumerWidget {
                           ),
                           const SizedBox(height: 1),
                           Text(
-                            item['kannada'] as String,
+                            isKn ? (item['title'] as String) : (item['kannada'] as String),
                             style: TextStyle(
                               fontFamily: 'Inter',
                               fontSize: 11,
