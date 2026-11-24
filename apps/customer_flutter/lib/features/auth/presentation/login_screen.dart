@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/feedo_colors.dart';
 import '../../../shared/widgets/feedo_button.dart';
 import '../../../shared/widgets/feedo_card.dart';
+import '../../../shared/widgets/feedo_logo.dart';
 import 'auth_provider.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -40,17 +41,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 20),
-              // Brand Icon
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: FeedoColors.goldGradient,
-                  boxShadow: [FeedoColors.goldShadow],
-                ),
-                child: const Icon(Icons.lock_person_rounded, color: Color(0xFF1F1A0E), size: 28),
-              ),
+              // Official Feedo Brand Logo
+              const FeedoLogo(size: 68, showShadow: true),
               const SizedBox(height: 24),
 
               Text(

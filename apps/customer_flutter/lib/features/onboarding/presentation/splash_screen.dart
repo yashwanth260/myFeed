@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/theme/feedo_colors.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/theme_provider.dart';
+import '../../../../shared/widgets/feedo_logo.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -77,28 +77,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerPr
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Gold Bowl / Pin Logo Mark
-                      Container(
-                        width: 90,
-                        height: 90,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: FeedoColors.goldGradient,
-                          boxShadow: [
-                            BoxShadow(
-                              color: FeedoColors.deepGold.withOpacity(0.4),
-                              blurRadius: 24,
-                              offset: const Offset(0, 8),
-                            ),
-                          ],
-                        ),
-                        child: const Center(
-                          child: Icon(
-                            Icons.restaurant_menu_rounded,
-                            size: 46,
-                            color: Color(0xFF1F1A0E),
-                          ),
-                        ),
+                      // Official Gold Fork-Pin Logo Mark
+                      const FeedoLogo(
+                        size: 110,
+                        showShadow: true,
                       ),
                       const SizedBox(height: 20),
 

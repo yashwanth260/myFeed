@@ -11,6 +11,7 @@ import 'widgets/category_chip_list.dart';
 import 'widgets/promo_carousel.dart';
 import 'widgets/location_selector_sheet.dart';
 import 'widgets/service_hub_banner.dart';
+import '../../../shared/widgets/feedo_logo.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -51,14 +52,7 @@ class HomeScreen extends ConsumerWidget {
                             },
                             child: Row(
                               children: [
-                                Container(
-                                  padding: const EdgeInsets.all(7),
-                                  decoration: BoxDecoration(
-                                    color: FeedoColors.lightGold.withOpacity(0.25),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(Icons.location_on_rounded, color: FeedoColors.deepGold, size: 18),
-                                ),
+                                const FeedoLogo(size: 34, showShadow: true),
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Column(
