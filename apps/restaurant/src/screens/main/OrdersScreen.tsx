@@ -20,6 +20,10 @@ import {
   CalendarDays,
   TrendingUp,
   ArrowLeft,
+  Copy,
+  Check,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import { FeedoDispatchAgentModal } from '../../components/chat/FeedoDispatchAgentModal';
 
@@ -37,12 +41,31 @@ export const OrdersScreen: React.FC = () => {
     verifyPickup,
     confirmHandover,
     startOutForDelivery,
+    isPrototypeMode,
+    simulateNewIncomingOrder,
   } = useApp();
 
   const [activeTab, setActiveTab] = useState<TabType>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [dateRange, setDateRange] = useState<DateRange>('all');
   const [isDispatchAgentOpen, setIsDispatchAgentOpen] = useState(false);
+  const [expandedAddressIds, setExpandedAddressIds] = useState<Set<string>>(new Set());
+  const [copiedAddressId, setCopiedAddressId] = useState<string | null>(null);
+
+  const toggleAddressExpand = (orderId: string) => {
+    setExpandedAddressIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(orderId)) next.delete(orderId);
+      else next.add(orderId);
+      return next;
+    });
+  };
+
+  const handleCopyAddress = (orderId: string, address: string) => {
+    navigator.clipboard.writeText(address);
+    setCopiedAddressId(orderId);
+    setTimeout(() => setCopiedAddressId(null), 2000);
+  };
 
   // ── Date-filtered orders ──────────────────────────────────────
   const dateFilteredOrders = useMemo(() => {
@@ -112,14 +135,14 @@ export const OrdersScreen: React.FC = () => {
     { id: 'ALL',       label: 'All Orders'        },
     { id: 'NEW',       label: 'New'               },
     { id: 'PREPARING', label: 'Preparing'         },
-    { id: 'READY',     label: 'Ready for Pickup'  },
+    { id: 'READY',     label: 'Food Ready'        },
     { id: 'PICKED_UP', label: 'Out for Delivery'  },
     { id: 'DELIVERED', label: 'Delivered'         },
     { id: 'CANCELLED', label: 'Cancelled'         },
   ];
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 animate-in fade-in">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 animate-in fade-in pb-28 sm:pb-24">
 
       {/* ── Header ─────────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -324,106 +347,158 @@ export const OrdersScreen: React.FC = () => {
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredOrders.map((order) => (
-            <div
-              key={order.id}
-              className="bg-white rounded-3xl p-5 border border-slate-200 hover:border-amber-300 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between space-y-4"
-            >
-              <div>
-                {/* Card Top */}
-                <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-3">
-                  <div>
-                    <span className="text-sm font-black font-mono text-slate-900">#{order.id}</span>
-                    <p className="text-[10px] text-slate-400">{order.createdAt}</p>
-                  </div>
-                  <StatusBadge status={order.status} size="sm" />
-                </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          {filteredOrders.map((order) => {
+            const isAddressExpanded = expandedAddressIds.has(order.id);
+            const isAddressCopied = copiedAddressId === order.id;
 
-                {/* Customer */}
-                <div className="mb-3">
-                  <h4 className="text-xs font-bold text-slate-900">{order.customer.name}</h4>
-                  <p className="text-[11px] text-slate-500 font-mono">{order.customer.phoneMasked}</p>
-                  <p className="text-[11px] text-slate-500 truncate">{order.customer.address}</p>
-                </div>
-
-                {/* Items */}
-                <div className="bg-slate-50 rounded-2xl p-3 space-y-1.5 mb-3 border border-slate-100">
-                  {order.items.map((it) => (
-                    <div key={it.id} className="flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-1.5">
-                        <VegIndicator isVeg={it.isVeg} size="sm" />
-                        <span className="font-semibold text-slate-800">{it.quantity} × {it.name}</span>
-                      </div>
-                      <span className="font-mono text-slate-600 font-semibold">₹{it.price * it.quantity}</span>
+            return (
+              <div
+                key={order.id}
+                className="bg-white rounded-3xl p-5 border border-slate-200 hover:border-amber-300 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between space-y-4"
+              >
+                <div>
+                  {/* Card Top: Order ID + Time on Left, StatusBadge on Right */}
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-3 gap-2">
+                    <div className="min-w-0 flex-1">
+                      <span className="text-sm font-black font-mono text-slate-900 tracking-tight">#{order.id}</span>
+                      <p className="text-[10px] text-slate-400 mt-0.5">{order.createdAt}</p>
                     </div>
-                  ))}
-                  {order.specialInstructions && (
-                    <p className="text-[10px] text-amber-700 font-medium italic pt-1 border-t border-slate-200">
-                      "{order.specialInstructions}"
-                    </p>
-                  )}
-                </div>
+                    <StatusBadge status={order.status} size="sm" />
+                  </div>
 
-                {/* Cancellation reason if cancelled */}
-                {['RESTAURANT_REJECTED', 'CUSTOMER_CANCELLED'].includes(order.status) && (
-                  <div className="bg-rose-50 rounded-xl p-2.5 mb-3 border border-rose-100">
-                    <p className="text-[10px] font-bold text-rose-700">
-                      {order.status === 'RESTAURANT_REJECTED' ? 'Rejected by Restaurant' : 'Cancelled by Customer'}
-                    </p>
-                    {order.rejectionReason && (
-                      <p className="text-[10px] text-rose-600 mt-0.5">Reason: {order.rejectionReason}</p>
+                  {/* Customer Section: Name, Masked Phone, Address with Expand/Copy */}
+                  <div className="mb-3 space-y-1.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <h4 className="text-xs font-bold text-slate-900 truncate">{order.customer.name}</h4>
+                      <span className="text-[11px] text-slate-500 font-mono shrink-0">{order.customer.phoneMasked}</span>
+                    </div>
+
+                    <div className="flex items-start justify-between gap-2 text-[11px] text-slate-600 bg-slate-50/70 rounded-xl p-2 border border-slate-100">
+                      <p className={`flex-1 ${isAddressExpanded ? 'break-words' : 'truncate'}`} title={order.customer.address}>
+                        {order.customer.address}
+                      </p>
+                      <div className="flex items-center gap-1.5 shrink-0 pl-1">
+                        <button
+                          type="button"
+                          onClick={() => toggleAddressExpand(order.id)}
+                          className="text-amber-700 hover:text-amber-800 text-[10px] font-bold cursor-pointer hover:underline flex items-center gap-0.5"
+                        >
+                          {isAddressExpanded ? (
+                            <><span>Less</span><ChevronUp size={11} /></>
+                          ) : (
+                            <><span>More</span><ChevronDown size={11} /></>
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleCopyAddress(order.id, order.customer.address)}
+                          title="Copy address"
+                          className="p-1 rounded hover:bg-slate-200/60 text-slate-400 hover:text-slate-700 cursor-pointer transition-colors"
+                        >
+                          {isAddressCopied ? (
+                            <Check size={12} className="text-emerald-600" />
+                          ) : (
+                            <Copy size={12} />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Items List: Clean 2-column row per item */}
+                  <div className="bg-slate-50 rounded-2xl p-3 space-y-2 mb-3 border border-slate-100">
+                    <div className="space-y-1.5">
+                      {order.items.map((it) => (
+                        <div key={it.id} className="flex items-center justify-between text-xs gap-2">
+                          <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                            <VegIndicator isVeg={it.isVeg} size="sm" />
+                            <span className="font-semibold text-slate-800 truncate" title={`${it.quantity} × ${it.name}`}>
+                              {it.quantity} × {it.name}
+                            </span>
+                          </div>
+                          <span className="font-mono text-slate-700 font-bold shrink-0 tabular-nums">
+                            ₹{it.price * it.quantity}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Special Instructions: Full-width subtle tinted callout box */}
+                    {order.specialInstructions && (
+                      <div className="pt-2 mt-1 border-t border-slate-200/70">
+                        <div className="bg-amber-50 rounded-xl p-2 border border-amber-200/80 text-amber-900 text-[11px] leading-snug">
+                          <span className="font-bold">Instructions: </span>
+                          <span className="italic">"{order.specialInstructions}"</span>
+                        </div>
+                      </div>
                     )}
                   </div>
-                )}
 
-                {/* Rider */}
-                {order.rider && (
-                  <div className="flex items-center justify-between p-2.5 bg-indigo-50/60 rounded-xl border border-indigo-100 text-xs text-indigo-900 mb-3">
-                    <div className="flex items-center gap-2">
-                      <Bike className="w-4 h-4 text-indigo-600" />
-                      <span className="font-bold">{order.rider.name}</span>
+                  {/* Cancellation reason if cancelled */}
+                  {['RESTAURANT_REJECTED', 'CUSTOMER_CANCELLED'].includes(order.status) && (
+                    <div className="bg-rose-50 rounded-xl p-2.5 mb-3 border border-rose-100">
+                      <p className="text-[10px] font-bold text-rose-700">
+                        {order.status === 'RESTAURANT_REJECTED' ? 'Rejected by Restaurant' : 'Cancelled by Customer'}
+                      </p>
+                      {order.rejectionReason && (
+                        <p className="text-[10px] text-rose-600 mt-0.5">Reason: {order.rejectionReason}</p>
+                      )}
                     </div>
-                    <span className="font-mono font-bold text-[11px]">{order.rider.vehicleNumber}</span>
-                  </div>
-                )}
-              </div>
+                  )}
 
-              {/* Footer Actions */}
-              <div className="pt-3 border-t border-slate-100 space-y-2">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-500">Bill Total</span>
-                  <span className="font-mono font-black text-slate-900 text-sm">₹{order.total}</span>
+                  {/* Rider Info: Clean full-width rider bar */}
+                  {order.rider && (
+                    <div className="flex items-center justify-between p-2.5 bg-indigo-50/70 rounded-xl border border-indigo-100 text-xs text-indigo-900 mb-3">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="w-6 h-6 rounded-lg bg-indigo-100 flex items-center justify-center shrink-0">
+                          <Bike className="w-3.5 h-3.5 text-indigo-700" />
+                        </div>
+                        <span className="font-bold truncate">{order.rider.name}</span>
+                      </div>
+                      <span className="font-mono font-bold text-[11px] shrink-0 bg-white/80 px-2 py-0.5 rounded border border-indigo-200/60">
+                        {order.rider.vehicleNumber}
+                      </span>
+                    </div>
+                  )}
                 </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setSelectedOrder(order)}
-                    className="flex-1 py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-colors flex items-center justify-center gap-1 cursor-pointer"
-                  >
-                    <Eye className="w-3.5 h-3.5" /><span>View Details</span>
-                  </button>
-                  {order.status === 'RESTAURANT_ACCEPTED' && (
-                    <button
-                      onClick={() => startPreparingOrder(order.id)}
-                      className="flex-1 py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer"
-                    >Start Cooking</button>
-                  )}
-                  {order.status === 'PREPARING' && (
-                    <button
-                      onClick={() => markFoodReady(order.id)}
-                      className="flex-1 py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer"
-                    >Food Ready</button>
-                  )}
-                  {['READY_FOR_PICKUP', 'RIDER_ASSIGNED', 'RIDER_ARRIVED', 'PICKUP_VERIFIED'].includes(order.status) && (
+
+                {/* Footer Actions */}
+                <div className="pt-3 border-t border-slate-100 space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-slate-500 font-medium">Bill Total</span>
+                    <span className="font-mono font-black text-slate-900 text-sm">₹{order.total}</span>
+                  </div>
+                  <div className="flex gap-2">
                     <button
                       onClick={() => setSelectedOrder(order)}
-                      className="flex-1 py-2 px-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer"
-                    >Verify Handover</button>
-                  )}
+                      className="flex-1 py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-colors flex items-center justify-center gap-1 cursor-pointer"
+                    >
+                      <Eye className="w-3.5 h-3.5" /><span>View Details</span>
+                    </button>
+                    {order.status === 'RESTAURANT_ACCEPTED' && (
+                      <button
+                        onClick={() => startPreparingOrder(order.id)}
+                        className="flex-1 py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer"
+                      >Start Cooking</button>
+                    )}
+                    {order.status === 'PREPARING' && (
+                      <button
+                        onClick={() => markFoodReady(order.id)}
+                        className="flex-1 py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer"
+                      >Food Ready</button>
+                    )}
+                    {['READY_FOR_PICKUP', 'RIDER_ASSIGNED', 'RIDER_ARRIVED', 'PICKUP_VERIFIED'].includes(order.status) && (
+                      <button
+                        onClick={() => setSelectedOrder(order)}
+                        className="flex-1 py-2 px-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer"
+                      >Verify Handover</button>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

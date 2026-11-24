@@ -1,85 +1,51 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/feedo_colors.dart';
-import '../../../core/localization/language_provider.dart';
 import '../../../shared/widgets/feedo_button.dart';
 
-class OnboardingScreen extends ConsumerStatefulWidget {
+class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
 
   @override
-  ConsumerState<OnboardingScreen> createState() => _OnboardingScreenState();
+  State<OnboardingScreen> createState() => _OnboardingScreenState();
 }
 
-class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
+class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentIndex = 0;
+
+  final List<_OnboardingItem> _items = const [
+    _OnboardingItem(
+      title: 'Discover Gold Standards',
+      description: 'Explore premier restaurants, royal biryanis, sourdough crusts and chef curated feasts.',
+      icon: Icons.explore_rounded,
+    ),
+    _OnboardingItem(
+      title: 'Seamless Feast Customisation',
+      description: 'Tailor every portion size, cheese bursts, and spice levels with instant bill breakdowns.',
+      icon: Icons.room_service_rounded,
+    ),
+    _OnboardingItem(
+      title: 'Precision GPS Live Tracking',
+      description: 'Follow your dedicated rider in real-time from kitchen wok to your doorstep with verified OTP security.',
+      icon: Icons.moped_rounded,
+    ),
+  ];
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final strings = ref.watch(appStringsProvider);
-    final currentLang = ref.watch(languageProvider);
-
-    final items = [
-      _OnboardingItem(
-        title: strings.onbTitle1,
-        description: strings.onbDesc1,
-        icon: Icons.explore_rounded,
-      ),
-      _OnboardingItem(
-        title: strings.onbTitle2,
-        description: strings.onbDesc2,
-        icon: Icons.room_service_rounded,
-      ),
-      _OnboardingItem(
-        title: strings.onbTitle3,
-        description: strings.onbDesc3,
-        icon: Icons.moped_rounded,
-      ),
-    ];
 
     return Scaffold(
       backgroundColor: isDark ? FeedoColors.bgDark : FeedoColors.bgLight,
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: InkWell(
-          onTap: () => ref.read(languageProvider.notifier).toggleLanguage(),
-          borderRadius: BorderRadius.circular(16),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF262114) : const Color(0xFFFFF3D6),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: FeedoColors.primaryGold.withOpacity(0.5), width: 1),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.language_rounded, size: 14, color: FeedoColors.deepGold),
-                const SizedBox(width: 5),
-                Text(
-                  currentLang == AppLanguage.kannada ? 'ಕನ್ನಡ' : 'EN',
-                  style: const TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                    color: FeedoColors.deepGold,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
         actions: [
           TextButton(
             onPressed: () => context.go('/login'),
-            child: Text(
-              strings.skip,
-              style: const TextStyle(
+            child: const Text(
+              'Skip',
+              style: TextStyle(
                 fontFamily: 'Inter',
                 fontWeight: FontWeight.w700,
                 color: FeedoColors.deepGold,
@@ -95,10 +61,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             Expanded(
               child: PageView.builder(
                 controller: _pageController,
-                itemCount: items.length,
+                itemCount: _items.length,
                 onPageChanged: (i) => setState(() => _currentIndex = i),
                 itemBuilder: (context, index) {
-                  final item = items[index];
+                  final item = _items[index];
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 32.0),
                     child: Column(
@@ -150,7 +116,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             // Page Indicators
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(items.length, (i) {
+              children: List.generate(_items.length, (i) {
                 final isSelected = i == _currentIndex;
                 return AnimatedContainer(
                   duration: const Duration(milliseconds: 250),
@@ -172,9 +138,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               child: FeedoButton(
                 width: double.infinity,
                 height: 52,
-                text: _currentIndex == items.length - 1 ? strings.getStarted : strings.continueBtn,
+                text: _currentIndex == _items.length - 1 ? 'Get Started' : 'Continue',
                 onPressed: () {
-                  if (_currentIndex < items.length - 1) {
+                  if (_currentIndex < _items.length - 1) {
                     _pageController.nextPage(
                       duration: const Duration(milliseconds: 300),
                       curve: Curves.easeInOut,
@@ -203,3 +169,4 @@ class _OnboardingItem {
     required this.icon,
   });
 }
+

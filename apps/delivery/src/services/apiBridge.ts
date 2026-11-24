@@ -6,8 +6,9 @@
  */
 
 const getBaseUrl = (): string => {
-  if (typeof process !== 'undefined' && (process.env as any)?.REACT_APP_API_URL) {
-    return (process.env as any).REACT_APP_API_URL;
+  const gProcess = (globalThis as any)?.process;
+  if (gProcess?.env?.REACT_APP_API_URL) {
+    return gProcess.env.REACT_APP_API_URL;
   }
   if (typeof window !== 'undefined' && window.location?.hostname) {
     const host = window.location.hostname;

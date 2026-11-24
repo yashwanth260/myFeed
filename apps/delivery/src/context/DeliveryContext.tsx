@@ -49,7 +49,36 @@ interface DeliveryContextType {
 const DeliveryContext = createContext<DeliveryContextType | undefined>(undefined);
 
 export const DeliveryProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [isOnline, setIsOnline] = useState<boolean>(true);
+  const [isOnline, setIsOnline] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('feedo_delivery_online_status');
+      return saved !== null ? saved === 'true' : false; // Default Offline on first load
+    } catch {
+      return false;
+    }
+  });
+
+  // Track dismissed, expired & accepted offer IDs so they never loop
+  const [handledOfferIds, setHandledOfferIds] = useState<Set<string>>(() => {
+    try {
+      const saved = sessionStorage.getItem('feedo_handled_offers');
+      return saved ? new Set(JSON.parse(saved)) : new Set<string>();
+    } catch {
+      return new Set<string>();
+    }
+  });
+
+  const markOfferHandled = (orderId: string) => {
+    if (!orderId) return;
+    setHandledOfferIds((prev) => {
+      const updated = new Set(prev).add(orderId);
+      try {
+        sessionStorage.setItem('feedo_handled_offers', JSON.stringify(Array.from(updated)));
+      } catch {}
+      return updated;
+    });
+  };
+
   const [activeOrders, setActiveOrders] = useState<Order[]>([]);
   const [activeOrderId, setActiveOrderId] = useState<string | null>(null);
   const [offeredOrder, setOfferedOrder] = useState<Order | null>(null);
@@ -88,21 +117,28 @@ export const DeliveryProvider: React.FC<{ children: ReactNode }> = ({ children }
     setRemainingCancellations(Math.max(0, 5 - cancellationsToday));
   };
 
-
-
-  // Check backend offers and auto order arrival after going online (if capacity available)
+  // Check real backend offers ONLY when Rider is Online, has NO active orders, and no current offer
   useEffect(() => {
-    let timer: ReturnType<typeof setTimeout>;
     let isCancelled = false;
 
     const checkOffers = async () => {
-      if (isOnline && activeOrders.length < 5 && !offeredOrder) {
-        try {
-          const backendOffers = await deliveryApiBridge.fetchAvailableOffers('usr-delivery-01');
-          if (!isCancelled && backendOffers && backendOffers.length > 0) {
-            const bo = backendOffers[0];
+      // NEVER trigger or display when Offline, or when rider already has active deliveries, or pending offer
+      if (!isOnline || activeOrders.length > 0 || !!activeOrder || !!offeredOrder) {
+        return;
+      }
+
+      try {
+        const backendOffers = await deliveryApiBridge.fetchAvailableOffers('usr-delivery-01');
+        if (!isCancelled && backendOffers && backendOffers.length > 0) {
+          // Find first backend offer that has NOT already been accepted, declined or expired
+          const bo = backendOffers.find(
+            (o) => !handledOfferIds.has(o.orderId || o.assignmentId || '')
+          );
+
+          if (bo) {
+            const offerId = bo.orderId || bo.assignmentId || 'ORD-CC-8821';
             const mappedOffer: Order = {
-              id: bo.orderId || bo.assignmentId || 'ORD-CC-8821',
+              id: offerId,
               category: 'FOOD',
               store: {
                 name: bo.restaurant?.name || 'Spice Junction / Feedo',
@@ -144,31 +180,25 @@ export const DeliveryProvider: React.FC<{ children: ReactNode }> = ({ children }
               createdAt: 'Just Now',
             };
             setOfferedOrder(mappedOffer);
-            return;
           }
-        } catch {
-          // Fall through to simulated offer
         }
-
-        timer = setTimeout(() => {
-          if (!isCancelled && !offeredOrder && isOnline) {
-            const firstOffer = mockOrders[0];
-            setOfferedOrder({ ...firstOffer, status: 'OFFERED' });
-          }
-        }, 4000);
+      } catch {
+        // Silent failure - do not show unprompted simulated popups
       }
     };
 
     checkOffers();
     return () => {
       isCancelled = true;
-      if (timer) clearTimeout(timer);
     };
-  }, [isOnline, activeOrders.length, offeredOrder]);
+  }, [isOnline, activeOrders.length, activeOrder, offeredOrder, handledOfferIds]);
 
   const toggleOnline = () => {
     const nextState = !isOnline;
     setIsOnline(nextState);
+    try {
+      localStorage.setItem('feedo_delivery_online_status', String(nextState));
+    } catch {}
     deliveryApiBridge.setDutyStatus(nextState);
     if (!nextState) {
       orderAlertService.stopAlert();
@@ -234,6 +264,7 @@ export const DeliveryProvider: React.FC<{ children: ReactNode }> = ({ children }
     };
 
     if (offeredOrder.id) {
+      markOfferHandled(offeredOrder.id);
       deliveryApiBridge.acceptOffer(offeredOrder.id);
     }
 
@@ -241,11 +272,12 @@ export const DeliveryProvider: React.FC<{ children: ReactNode }> = ({ children }
     setActiveOrderId(accepted.id);
     setOfferedOrder(null);
     setGpsState('NORMAL');
-
-
   };
 
   const declineOrderOffer = () => {
+    if (offeredOrder?.id) {
+      markOfferHandled(offeredOrder.id);
+    }
     orderAlertService.stopAlert();
     setOfferedOrder(null);
   };
@@ -406,13 +438,24 @@ export const DeliveryProvider: React.FC<{ children: ReactNode }> = ({ children }
   const triggerDemoOffer = (category?: CategoryType, isBatched?: boolean) => {
     clearErrors();
 
+    // Do NOT trigger if rider is Offline
+    if (!isOnline) {
+      return;
+    }
+
+    // Do NOT trigger if rider already has an active delivery
+    if (activeOrders.length > 0 || activeOrder) {
+      return;
+    }
+
     if (activeOrders.length >= 5) {
       setCapacityFullError('You have reached your maximum active order capacity of 5.');
       return;
     }
 
     if (isBatched) {
-      setOfferedOrder({ ...mockBatchedOffer, status: 'OFFERED' });
+      const batchedId = `BATCH-${Math.floor(1000 + Math.random() * 9000)}`;
+      setOfferedOrder({ ...mockBatchedOffer, id: batchedId, status: 'OFFERED' });
       return;
     }
 
@@ -427,45 +470,51 @@ export const DeliveryProvider: React.FC<{ children: ReactNode }> = ({ children }
       HYPERLOCAL: 'FedEx Document Center',
     };
 
-    const newOffer: Order = {
-      id: `FD${Math.floor(100000 + Math.random() * 900000)}`,
-      category: cat,
-      store: {
-        name: sampleNames[cat],
-        address: '100 Feet Rd, Indiranagar, Bengaluru',
-        phone: '+91 98765 99887',
-        lat: 12.9784,
-        lng: 77.6408,
-        preparationStatus: 'Package Ready for Dispatch',
-      },
-      customer: {
-        name: 'Siddharth V.',
-        address: 'Tower 4, Apt 301, Century Saras, Yelahanka',
-        phone: '+91 98111 22334',
-        lat: 13.0982,
-        lng: 77.596,
-        instructions: 'Hand over to security at main gate.',
-      },
-      distanceToPickup: 1.4,
-      deliveryDistance: 5.0,
-      totalDistance: 6.4,
-      estimatedEarnings: 46.5,
-      earningsBreakdown: {
-        deliveryEarning: 26.5,
-        basePay: 0.0,
-        distancePay: 26.5,
-        surgeBonus: 0,
-        tip: 20.0,
-      },
-      estimatedTime: 22,
-      items: [{ id: 'di1', name: `Express ${cat} Package`, quantity: 1, price: 499 }],
-      itemCount: 1,
-      zone: 'Indiranagar',
-      pickupCode: '4821',
-      deliveryOtp: '9102',
-      status: 'OFFERED',
-      createdAt: 'Just now',
-    };
+    // Find first unhandled mock order or generate a fresh unique one
+    const unhandled = mockOrders.find((m) => !handledOfferIds.has(m.id));
+    const randomSuffix = Math.floor(100000 + Math.random() * 900000);
+
+    const newOffer: Order = unhandled
+      ? { ...unhandled, status: 'OFFERED' }
+      : {
+          id: `FD${randomSuffix}`,
+          category: cat,
+          store: {
+            name: sampleNames[cat],
+            address: '100 Feet Rd, Indiranagar, Bengaluru',
+            phone: '+91 98765 99887',
+            lat: 12.9784,
+            lng: 77.6408,
+            preparationStatus: 'Package Ready for Dispatch',
+          },
+          customer: {
+            name: 'Siddharth V.',
+            address: 'Tower 4, Apt 301, Century Saras, Yelahanka',
+            phone: '+91 98111 22334',
+            lat: 13.0982,
+            lng: 77.596,
+            instructions: 'Hand over to security at main gate.',
+          },
+          distanceToPickup: 1.4,
+          deliveryDistance: 5.0,
+          totalDistance: 6.4,
+          estimatedEarnings: 46.5,
+          earningsBreakdown: {
+            deliveryEarning: 26.5,
+            basePay: 0.0,
+            distancePay: 26.5,
+            surgeBonus: 0,
+            tip: 20.0,
+          },
+          estimatedTime: 22,
+          items: [{ id: 'di1', name: `Express ${cat} Package`, quantity: 1, price: 499 }],
+          itemCount: 1,
+          zone: 'Indiranagar',
+          pickupCode: '4821',
+          deliveryOtp: '9102',
+          status: 'OFFERED',
+          createdAt: 'Just now',
+        };
 
     setOfferedOrder(newOffer);
   };
@@ -477,6 +526,10 @@ export const DeliveryProvider: React.FC<{ children: ReactNode }> = ({ children }
     setOrdersHistory(mockOrders);
     setCancellationsToday(0);
     setRemainingCancellations(5);
+    setHandledOfferIds(new Set<string>());
+    try {
+      sessionStorage.removeItem('feedo_handled_offers');
+    } catch {}
     clearErrors();
     setDailyMetrics({
       earnings: todayEarningsSummary.total,

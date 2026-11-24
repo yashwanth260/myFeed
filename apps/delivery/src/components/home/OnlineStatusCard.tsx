@@ -3,7 +3,7 @@ import { useDelivery } from '../../context/DeliveryContext';
 import { Power, Loader2, Sparkles } from 'lucide-react';
 
 export const OnlineStatusCard: React.FC = () => {
-  const { isOnline, toggleOnline } = useDelivery();
+  const { isOnline, toggleOnline, triggerDemoOffer, activeOrders, activeOrder } = useDelivery();
   const [isUpdating, setIsUpdating] = useState<boolean>(false);
 
   const handleToggle = async () => {
@@ -85,6 +85,18 @@ export const OnlineStatusCard: React.FC = () => {
           </div>
         </div>
       </button>
+
+      {/* Dev/Demo Simulation Button: Only available when Online with no active delivery */}
+      {isOnline && activeOrders.length === 0 && !activeOrder && (
+        <button
+          type="button"
+          onClick={() => triggerDemoOffer()}
+          className="w-full py-2.5 px-3 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs active:scale-[0.99]"
+        >
+          <Sparkles size={14} className="text-amber-600" />
+          <span>Simulate New Order</span>
+        </button>
+      )}
     </div>
   );
 };

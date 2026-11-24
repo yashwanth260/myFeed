@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/onboarding/presentation/splash_screen.dart';
-import '../../features/onboarding/presentation/language_selection_screen.dart';
 import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/otp_screen.dart';
@@ -28,13 +27,6 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/splash',
       builder: (context, state) => const SplashScreen(),
-    ),
-    GoRoute(
-      path: '/language',
-      builder: (context, state) {
-        final fromProfile = state.uri.queryParameters['fromProfile'] == 'true';
-        return LanguageSelectionScreen(fromProfile: fromProfile);
-      },
     ),
     GoRoute(
       path: '/onboarding',

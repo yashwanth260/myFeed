@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/feedo_colors.dart';
 import '../../../core/utils/currency_formatter.dart';
-import '../../../core/localization/language_provider.dart';
 import '../../../shared/widgets/restaurant_card.dart';
 import '../../auth/presentation/auth_provider.dart';
 import '../../cart/presentation/cart_provider.dart';
@@ -24,8 +23,6 @@ class HomeScreen extends ConsumerWidget {
     final restaurants = ref.watch(filteredRestaurantsProvider);
     final favorites = ref.watch(favoritesProvider);
     final cart = ref.watch(cartProvider);
-    final strings = ref.watch(appStringsProvider);
-    final currentLang = ref.watch(languageProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
@@ -70,7 +67,7 @@ class HomeScreen extends ConsumerWidget {
                                       Row(
                                         children: [
                                           Text(
-                                            strings.deliverTo,
+                                            'Deliver to',
                                             style: TextStyle(
                                               fontFamily: 'Inter',
                                               fontSize: 11,
@@ -93,35 +90,6 @@ class HomeScreen extends ConsumerWidget {
                                         ),
                                       ),
                                     ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-
-                        // Quick Language Switcher Pill
-                        GestureDetector(
-                          onTap: () => ref.read(languageProvider.notifier).toggleLanguage(),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                            margin: const EdgeInsets.only(right: 8),
-                            decoration: BoxDecoration(
-                              color: isDark ? const Color(0xFF262114) : const Color(0xFFFFF3D6),
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: FeedoColors.primaryGold.withOpacity(0.5), width: 1),
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(Icons.language_rounded, size: 14, color: FeedoColors.deepGold),
-                                const SizedBox(width: 4),
-                                Text(
-                                  currentLang == AppLanguage.kannada ? 'ಕನ್ನಡ' : 'EN',
-                                  style: const TextStyle(
-                                    fontFamily: 'Inter',
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w800,
-                                    color: FeedoColors.deepGold,
                                   ),
                                 ),
                               ],
@@ -192,7 +160,7 @@ class HomeScreen extends ConsumerWidget {
                             const Icon(Icons.search_rounded, color: FeedoColors.deepGold, size: 20),
                             const SizedBox(width: 10),
                             Text(
-                              strings.searchPlaceholder,
+                              'Search "Hyderabadi Biryani", "Pizza"...',
                               style: TextStyle(
                                 fontFamily: 'Inter',
                                 fontSize: 13,
@@ -271,15 +239,15 @@ class HomeScreen extends ConsumerWidget {
                       scrollDirection: Axis.horizontal,
                       child: Row(
                         children: [
-                          _buildSectionChip(context, ref, HomeSection.all, strings.allKitchens, currentSection),
+                          _buildSectionChip(context, ref, HomeSection.all, '✨ All Kitchens', currentSection),
                           const SizedBox(width: 8),
-                          _buildSectionChip(context, ref, HomeSection.popular, strings.popularNearYou, currentSection),
+                          _buildSectionChip(context, ref, HomeSection.popular, '🔥 Popular near you', currentSection),
                           const SizedBox(width: 8),
-                          _buildSectionChip(context, ref, HomeSection.topRated, strings.topRated, currentSection),
+                          _buildSectionChip(context, ref, HomeSection.topRated, '⭐ Top rated', currentSection),
                           const SizedBox(width: 8),
-                          _buildSectionChip(context, ref, HomeSection.fastDelivery, strings.fastDelivery, currentSection),
+                          _buildSectionChip(context, ref, HomeSection.fastDelivery, '⚡ Fast delivery', currentSection),
                           const SizedBox(width: 8),
-                          _buildSectionChip(context, ref, HomeSection.newOnFeedo, strings.newOnFeedo, currentSection),
+                          _buildSectionChip(context, ref, HomeSection.newOnFeedo, '🌱 New on Feedo', currentSection),
                         ],
                       ),
                     ),

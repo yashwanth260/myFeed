@@ -38,9 +38,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerPr
     Future.delayed(const Duration(milliseconds: 2200), () {
       if (mounted) {
         final storage = ref.read(localStorageServiceProvider);
-        if (!storage.hasChosenLanguage) {
-          context.go('/language');
-        } else if (storage.isLoggedIn) {
+        if (storage.isLoggedIn) {
           context.go('/home');
         } else {
           context.go('/onboarding');

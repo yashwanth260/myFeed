@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/feedo_colors.dart';
 import '../../../core/theme/theme_provider.dart';
-import '../../../core/localization/language_provider.dart';
 import '../../../shared/widgets/gold_app_bar.dart';
 import '../../../shared/widgets/feedo_card.dart';
 import '../../../shared/widgets/feedo_button.dart';
@@ -17,8 +16,6 @@ class ProfileScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authProvider).value;
     final isDark = ref.watch(themeModeProvider);
-    final currentLang = ref.watch(languageProvider);
-    final strings = ref.watch(appStringsProvider);
 
     return Scaffold(
       backgroundColor: isDark ? FeedoColors.bgDark : FeedoColors.bgLight,
@@ -188,11 +185,9 @@ class ProfileScreen extends ConsumerWidget {
                   const Divider(height: 1),
                   _ProfileTile(
                     icon: Icons.language_rounded,
-                    title: strings.appLanguage,
-                    subtitle: currentLang == AppLanguage.kannada
-                        ? 'ಕನ್ನಡ (Kannada) • ಸಕ್ರಿಯವಾಗಿದೆ'
-                        : 'English • Active',
-                    onTap: () => context.push('/language?fromProfile=true'),
+                    title: 'App Language',
+                    subtitle: 'English (US) • Regional support ready',
+                    onTap: () => _showLanguageDialog(context),
                   ),
                 ],
               ),
@@ -360,7 +355,62 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
-
+  void _showLanguageDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.language_rounded, color: FeedoColors.deepGold),
+            SizedBox(width: 8),
+            Text('Select Language'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            RadioListTile<String>(
+              value: 'en',
+              groupValue: 'en',
+              title: const Text('English (Default)'),
+              activeColor: FeedoColors.primaryGold,
+              onChanged: (_) => Navigator.pop(ctx),
+            ),
+            RadioListTile<String>(
+              value: 'kn',
+              groupValue: 'en',
+              title: const Text('ಕನ್ನಡ (Kannada)'),
+              activeColor: FeedoColors.primaryGold,
+              onChanged: (_) {
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Kannada language pack will be loaded in next update.')),
+                );
+              },
+            ),
+            RadioListTile<String>(
+              value: 'hi',
+              groupValue: 'en',
+              title: const Text('हिन्दी (Hindi)'),
+              activeColor: FeedoColors.primaryGold,
+              onChanged: (_) {
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Hindi language pack will be loaded in next update.')),
+                );
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
 
   void _showAboutDialog(BuildContext context) {
     showDialog(
